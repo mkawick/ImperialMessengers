@@ -13,6 +13,19 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
+*.ilk
+*.pdb
+*.log
+*.obj
+*.filters
+*.tlog
+*.idb
+*.suo 
+*.dep
+*.sdf
+*.ncb
+*.opensdf
+
 
 # Windows shortcuts
 *.lnk
