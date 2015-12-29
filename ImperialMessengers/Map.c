@@ -149,6 +149,19 @@ int  Walk2()
 	return totalPath;
 }
 
+int Walk3( int beIndex, struct BeginEnd be[MaxDimension] )
+{
+
+}
+
+void	StartWalk()
+{
+	int beIndex;
+	struct BeginEnd be[MaxDimension];
+
+	beIndex = 0;
+}
+
 void	AddDistancePath( int x, int y, int dist )
 {
 	AddValue( x, y, dist );
