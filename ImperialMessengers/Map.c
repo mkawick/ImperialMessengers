@@ -1,5 +1,7 @@
 // Map.c
 #include <memory.h>
+#include <assert.h>
+#include <conio.h>
 
 #define MaxDimension 100
 #define InvalidLocation -1
@@ -37,6 +39,11 @@ void	AddValue( int x, int y, int dist )
 		highestCity = x;
 	if ( y > highestCity )
 		highestCity = y;
+}
+
+void	AddDistancePath(int x, int y, int dist)
+{
+	AddValue(x, y, dist);
 }
 
 void	InitPath()
@@ -149,27 +156,64 @@ int  Walk2()
 	return totalPath;
 }
 
-int Walk3( int beIndex, struct BeginEnd be[MaxDimension] )
+int Walk3( int previousCity, int currentCity, int distancesFromFirstCity[MaxDimension], int trackingDistance ) // struct BeginEnd be[MaxDimension], 
 {
-
+	// calculate the distance from the currentCity to other cities plus the trackingDistance
+	for( int i=0; i<=highestCity; ++i )
+	{
+		if (i == previousCity || i == currentCity || path[currentCity][i] == -1)
+			continue;
+		int testDistance = trackingDistance + path[currentCity][i];
+		if ( testDistance <= distancesFromFirstCity[i] )
+		{
+			distancesFromFirstCity[i] = testDistance;
+			Walk3(currentCity, i, distancesFromFirstCity, testDistance);
+		}
+	}
+	return 0;
 }
 
-void	StartWalk()
+int	StartWalk()
 {
-	int beIndex;
-	struct BeginEnd be[MaxDimension];
+	int i; 
+	int biggestNumber;
+	int distancesFromFirstCity[MaxDimension];
+	for (i = 0; i<MaxDimension; ++i )
+		distancesFromFirstCity[i] = LargeNumber;
 
-	beIndex = 0;
+	// first we calculate the shortest distance between the first node and the rest
+	for ( i = 0; i<=highestCity; ++i )
+	{
+		distancesFromFirstCity[i] = path[0][i];
+	}
+	for (i = 1; i <= highestCity; ++i)// don't start at 0
+	{
+		Walk3(0, i, distancesFromFirstCity, distancesFromFirstCity[i]);
+	}
+
+	// now we have identified all of the distances, first we look for nodes not visited for an error.
+	for (i = 0; i <= highestCity; ++i)
+	{
+		if (LargeNumber == distancesFromFirstCity[i])
+			assert ( 0 );
+	}
+		
+	// and then we find the largest integer which is the minimum distance to visit all nodes.
+	
+	biggestNumber = -1;
+	for (i = 0; i <= highestCity; ++i)
+	{
+		if (biggestNumber < distancesFromFirstCity[i])
+			biggestNumber = distancesFromFirstCity[i];
+	}
+
+	return biggestNumber;
 }
 
-void	AddDistancePath( int x, int y, int dist )
-{
-	AddValue( x, y, dist );
-}
 
 void	Init()
 {
-	int shortest;
+	int shortestPathLength;
 	ClearPath();
 	ClearSearch();
 
@@ -187,5 +231,9 @@ void	Init()
 	//AddDistancePath( 2, 4, 50 );
 	AddDistancePath( 3, 4, 10 );
 
-	shortest = Walk2();
+	//shortest = Walk2();
+
+	shortestPathLength = StartWalk();
+	printf("path = %d long", shortestPathLength);
+	getch();
 }
