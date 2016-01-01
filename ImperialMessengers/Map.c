@@ -298,6 +298,6 @@ void	Init( const char* pathToAdjacencyMatrix )
 	//InitializeMapWithIsolatedIslandValues();
 
 	shortestPathLength = StartWalk();
-	printf("shortest path = %d long", shortestPathLength);
+	printf("%d", shortestPathLength);
 	getch();
 }
