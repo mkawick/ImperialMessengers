@@ -2,39 +2,32 @@
     CONSOLE APPLICATION : ImperialMessengers Project Overview
 ========================================================================
 
-AppWizard has created this ImperialMessengers application for you.
+This is a simple app once I did the cleanup. The hardest part is the text reading algorithm
+which has a lot of error checking and had to go through extensivetesting, which I am
+sure that I still missed a few bugs (you always do).
 
-This file contains a summary of what you will find in each of the files that
-make up your ImperialMessengers application.
+The algorithm is a simple dyksra and tracks the shortest distance from the origin, node 0,
+in a simple array and then looks for shorter ways to get there. Typical for Dykstra,
+it's a combination of breadth-first and depth-first search.
 
+The algorithm does some setup in "StartWalk" and does the search in "WalkToNextTowns".
 
-ImperialMessengers.vcxproj
-    This is the main project file for VC++ projects generated using an Application Wizard.
-    It contains information about the version of Visual C++ that generated the file, and
-    information about the platforms, configurations, and project features selected with the
-    Application Wizard.
-
-ImperialMessengers.vcxproj.filters
-    This is the filters file for VC++ projects generated using an Application Wizard. 
-    It contains information about the association between the files in your project 
-    and the filters. This association is used in the IDE to show grouping of files with
-    similar extensions under a specific node (for e.g. ".cpp" files are associated with the
-    "Source Files" filter).
-
-ImperialMessengers.cpp
-    This is the main application source file.
+Total time including fasle starts, testing, and cleanup was around 6 hours. I also
+did a lot of thinking before even starting.
 
 /////////////////////////////////////////////////////////////////////////////
-Other standard files:
+alternate methods tried:
 
-StdAfx.h, StdAfx.cpp
-    These files are used to build a precompiled header (PCH) file
-    named ImperialMessengers.pch and a precompiled types file named StdAfx.obj.
+I started with A* (I wrote a book on this topic) but I soon realized that this would not allow 
+for multiple cities to be considered as good destinations from a single city.
+
+I then went onto store all of the shortest paths and then use those to
+calculate the distance. But I ended up with some replication and this did not 
+tell me if a path were blocked or unreachable.
 
 /////////////////////////////////////////////////////////////////////////////
 Other notes:
 
-AppWizard uses "TODO:" comments to indicate parts of the source code you
-should add to or customize.
+Please be sure to provide feedback, regardless of the outcome.
 
 /////////////////////////////////////////////////////////////////////////////
