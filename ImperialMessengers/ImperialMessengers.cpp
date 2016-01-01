@@ -4,12 +4,12 @@
 
 extern "C"
 {
-	void	Init();
+	void	Init( const char* pathToAdjacencyMatrix );
 }
 
 int main(int argc, char* argv[])
 {
-	Init();
+	Init( "input.txt" );
 	return 0;
 }
 

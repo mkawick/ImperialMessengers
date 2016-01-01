@@ -2,12 +2,17 @@
 #include <memory.h>
 #include <assert.h>
 #include <conio.h>
+#include <stdio.h>
+#include <stdlib.h> 
+#include <direct.h>
 
+#pragma warning (disable:4996) // ms warning disable
 #define MaxDimension 100
 #define InvalidLocation -1
+#define BufferSize 5000
+
 const int LargeNumber = 100000000;
 int path[MaxDimension][MaxDimension];
-int search[MaxDimension][MaxDimension];
 int highestCity;
 
 void	ClearPath()
@@ -20,13 +25,18 @@ void	ClearPath()
 	highestCity = 0; 
 }
 
-void	ClearSearch()
-{
-	memset( search, -1, sizeof(int)* MaxDimension*MaxDimension );
-}
-
 void	AddValue( int x, int y, int dist )
 {
+	if (LargeNumber < dist)
+	{
+		printf("ERROR: input value is too large, please adjust the LargeNumber");
+		assert(0);
+	}
+	if( dist < 0 )
+	{
+		printf("ERROR: input value is too small, nothing under 0 is allowable");
+		assert(0);
+	}
 	if ( x < 0 || x >= MaxDimension ) // basic error prevention
 		return;
 	if ( y < 0 || y >= MaxDimension )
@@ -52,125 +62,26 @@ void	InitPath()
 	ClearPath();
 }
 
-struct BeginEnd
+void  Walk3( int previousCity, int currentCity, int distancesFromFirstCity[MaxDimension], int trackingDistance ) // struct BeginEnd be[MaxDimension], 
 {
-	int begin, end, dist;
-};
-
-int	Walk1()
-{
-	int i, j;
-	int totalPath;// a big number
-	int shortestPath;
-	int index;
-	int whichPathChosen;
-	struct BeginEnd be[100];
-
-	index = 0; 
-	totalPath = 0;
-	whichPathChosen = 0;
-	for ( i = 0; i < highestCity; i++ )
-	{
-		shortestPath = LargeNumber;
-		//shortestPath = path[i][0];
-		for ( j = 0; j <= highestCity; j++ )
-		{
-			if ( i == j )
-				continue;
-			if ( path[i][j] != InvalidLocation )
-			{
-				if ( path[i][j] < shortestPath )
-					shortestPath = path[i][j];
-				whichPathChosen = j;
-			}
-
-		/*	if ( path[j][i] != InvalidLocation )
-			{
-				if ( path[j][i] < shortestPath )
-					shortestPath = path[j][i];
-			}*/
-		}
-		if ( shortestPath == LargeNumber )
-			return -1;// major problem.. no path
-		be[index].dist = shortestPath;
-		be[index].begin = i;
-		be[index++].end = whichPathChosen;
-		totalPath += shortestPath;
-	}
-	return totalPath;
-}
-
-int	IsAlreadyInList( struct BeginEnd be[MaxDimension], int index, int b, int e )
-{
-	for ( int i = 0; i < index; i++ )
-	{
-		if ( be[i].begin == b && be[i].end == e )
-			return 1;
-		if ( be[i].begin == e && be[i].end == b )
-			return 1;
-	}
-	return 0;
-}
-
-int  Walk2()
-{
-	int i, j;
-	int totalPath;
-	int shortestPath;
-	int whichPathChosen;
-	int beIndex;
-	struct BeginEnd be[MaxDimension];
-
-	beIndex = 0;
-	totalPath = 0;
-	whichPathChosen = 0;
-
-	for ( i = highestCity-1; i >= 0; i-- )
-	{
-		shortestPath = LargeNumber;
-		for ( j = 0; j <= highestCity; j++ )
-		{
-			if ( i == j )
-				continue;
-			if ( path[i][j] != InvalidLocation )
-			{
-				if ( path[i][j] < shortestPath )
-				{
-					if ( IsAlreadyInList( be, beIndex, i, j ) == 0 )
-					{
-						shortestPath = path[i][j];
-						whichPathChosen = j;
-					}
-				}
-			}
-		}
-		if ( shortestPath == LargeNumber )
-			return -1;// major problem.. no path to one node
-		be[beIndex].dist = shortestPath;
-		be[beIndex].begin = i;
-		be[beIndex++].end = whichPathChosen;
-	}
-
-	// now that we have a list of shortes paths between cities, we should be able to add them
-	// first, we need to collapse nodes that originate at the same location
-	return totalPath;
-}
-
-int Walk3( int previousCity, int currentCity, int distancesFromFirstCity[MaxDimension], int trackingDistance ) // struct BeginEnd be[MaxDimension], 
-{
+	int testDistance;
 	// calculate the distance from the currentCity to other cities plus the trackingDistance
 	for( int i=0; i<=highestCity; ++i )
 	{
-		if (i == previousCity || i == currentCity || path[currentCity][i] == -1)
+		if (i == previousCity ||
+			i == currentCity ||
+			path[currentCity][i] == InvalidLocation)
+		{
 			continue;
-		int testDistance = trackingDistance + path[currentCity][i];
+		}
+
+		testDistance = trackingDistance + path[currentCity][i];
 		if ( testDistance <= distancesFromFirstCity[i] )
 		{
 			distancesFromFirstCity[i] = testDistance;
 			Walk3(currentCity, i, distancesFromFirstCity, testDistance);
 		}
 	}
-	return 0;
 }
 
 int	StartWalk()
@@ -194,8 +105,13 @@ int	StartWalk()
 	// now we have identified all of the distances, first we look for nodes not visited for an error.
 	for (i = 0; i <= highestCity; ++i)
 	{
-		if (LargeNumber == distancesFromFirstCity[i])
-			assert ( 0 );
+		if (LargeNumber == distancesFromFirstCity[i] ||
+			distancesFromFirstCity[i] == InvalidLocation)
+		{
+			printf( "ERROR: not all cities are reachable");
+			assert(0);
+			return -1;
+		}
 	}
 		
 	// and then we find the largest integer which is the minimum distance to visit all nodes.
@@ -210,30 +126,178 @@ int	StartWalk()
 	return biggestNumber;
 }
 
-
-void	Init()
+void	InitializeMapWithDefaultValues()
 {
-	int shortestPathLength;
 	ClearPath();
-	ClearSearch();
 
-	AddDistancePath( 0, 1, 50 );
+	AddDistancePath(0, 1, 50);
 
-	AddDistancePath( 0, 2, 30 );
-	AddDistancePath( 1, 2, 5 );
+	AddDistancePath(0, 2, 30);
+	AddDistancePath(1, 2, 5);
 
-	AddDistancePath( 0, 3, 100 );
-	AddDistancePath( 1, 3, 20 );
-	AddDistancePath( 2, 3, 50 );
+	AddDistancePath(0, 3, 100);
+	AddDistancePath(1, 3, 20);
+	AddDistancePath(2, 3, 50);
 
-	AddDistancePath( 0, 4, 10 );
+	AddDistancePath(0, 4, 10);
 	//AddDistancePath( 1, 4, 20 );
 	//AddDistancePath( 2, 4, 50 );
-	AddDistancePath( 3, 4, 10 );
+	AddDistancePath(3, 4, 10);
+}
 
-	//shortest = Walk2();
+void	InitializeMapWithIsolatedIslandValues()
+{
+	ClearPath();
+
+	AddDistancePath(0, 1, 50);
+
+	AddDistancePath(0, 2, 30);
+	AddDistancePath(1, 2, 5);
+
+	AddDistancePath(0, 3, 100);
+	AddDistancePath(1, 3, 20);
+	AddDistancePath(2, 3, 50);
+
+	AddDistancePath(0, 4, 10);
+	AddDistancePath(3, 4, 10);
+
+	AddDistancePath(5, 6, 10);
+	AddDistancePath(6, 7, 10);
+
+	AddDistancePath(8, 9, 10);
+}
+
+//-------------------------------------------------------
+
+int	InterpretLineAndAddDistances( const char* line, int lineNo, int numConnectionsExpected )
+{
+	int connectionId;
+	const char* ptr;
+	const char* end;
+	int dist;
+	connectionId = 0;
+	
+	for (ptr = line, end=ptr;; ptr = end, connectionId++) {
+		
+		while (*ptr == ' ' && *ptr != 0)// remove any spaces
+			ptr++;
+		if (*ptr == 'x' || *ptr == 'X')// normal
+		{
+			ptr+=2;// pass the x and the space following
+			end+=2;
+			dist = InvalidLocation;
+			continue;
+		}
+		else
+		{
+			dist = strtol(ptr, &end, 10);
+		}
+		
+		if (ptr == end)
+			break;
+		
+		if (dist != InvalidLocation && 
+			dist != 0)
+		{
+			AddDistancePath(lineNo, connectionId, dist);
+		}
+	}
+	return connectionId;
+}
+
+//-------------------------------------------------------
+
+int 	ReadInFile( const char* name )
+{
+	ClearPath();
+
+	FILE *ptr_file;
+	char buff[BufferSize];
+	int numCities;
+	int countLines;
+	int numConnections;
+	//getcwd(buff, BufferSize); // testing only
+	if (strlen(name) < 5)// filename + extension
+	{
+		printf("ERROR: incorrect file name");
+		assert(0);
+		return -1;
+	}
+
+	ptr_file = fopen(name, "r");
+	if (!ptr_file)
+	{
+		printf("ERROR: incorrect file name");
+		assert(0);
+		return -1;
+	}
+
+	if (fgets(buff, BufferSize, ptr_file) != NULL)
+	{
+		// interpet the first line as a count of the number of lines to come minus one.
+		numCities = atoi(buff);
+		if (numCities < 1 || numCities > MaxDimension )
+		{
+			printf("ERROR: incorrect value for the number of connections");
+			fclose(ptr_file);
+			assert(0);
+			return -1;
+		}
+	}
+
+	countLines = 0;
+	while (fgets(buff, BufferSize, ptr_file) != NULL)
+	{
+		countLines++;
+		if (countLines > MaxDimension )
+		{
+			printf("ERROR: incorrect value for the number of connections");
+			fclose(ptr_file);
+			assert(0);
+			return -1;
+		}
+		//printf("%s", buff);// testing only
+		// actually handle the line and fill in the map
+		numConnections = InterpretLineAndAddDistances(buff, countLines, countLines);
+		if (countLines != numConnections )
+		{
+			printf("ERROR: incorrect number of connections on a single line of text, line: %s", buff);
+			fclose(ptr_file);
+			assert(0);
+			return -1;
+		}
+	}
+	fclose(ptr_file);
+	printf("\n");
+	if( countLines == 0 )
+	{
+		printf("ERROR: incorrect value for the number of connections");
+		assert(0);
+		return -1;
+	}
+
+	if( countLines != numCities - 1 )// number of lines of connections sould be less than the number of cities
+	{
+		printf("ERROR: incorrect number of connections");
+		assert(0);
+		return -1;
+	}
+	
+	return 0;
+}
+
+void	Init( const char* pathToAdjacencyMatrix )
+{
+	int shortestPathLength;
+	if (ReadInFile( pathToAdjacencyMatrix ) == -1)
+	{
+		return;
+	}
+	// testing and validation
+	//InitializeMapWithDefaultValues();
+	//InitializeMapWithIsolatedIslandValues();
 
 	shortestPathLength = StartWalk();
-	printf("path = %d long", shortestPathLength);
+	printf("shortest path = %d long", shortestPathLength);
 	getch();
 }
