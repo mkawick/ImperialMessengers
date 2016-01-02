@@ -1,15 +1,9 @@
 // Map.c
+#include "global.h"
 #include <memory.h>
 #include <assert.h>
-#include <conio.h>
 #include <stdio.h>
 #include <stdlib.h> 
-#include <direct.h>
-
-#pragma warning (disable:4996) // ms warning disable
-#define MaxDimension 100
-#define InvalidLocation -1
-#define BufferSize 5000
 
 const int LargeNumber = 100000000;
 int path[MaxDimension][MaxDimension];
@@ -20,7 +14,7 @@ int highestCity;
 void	ClearPath()
 {
 	memset( path, InvalidLocation, sizeof(int)* MaxDimension*MaxDimension );
-	for ( int i = 0; i < MaxDimension; i++ )
+	for ( int i = 0; i < MaxDimension; ++i )
 	{
 		path[i][i] = 0;
 	}
@@ -31,7 +25,7 @@ void	ClearPath()
 
 void	AddDistancePath(int x, int y, int dist)
 {
-	if (LargeNumber < dist)
+	if ( LargeNumber < dist )
 	{
 		printf("ERROR: input value is too large, please adjust the LargeNumber\n");
 		assert(0);
@@ -69,7 +63,7 @@ void  WalkToNextTowns( int previousCity, int currentCity, int distancesFromFirst
 {
 	int testDistance;
 	// calculate the distance from the currentCity to other cities plus the trackingDistance
-	for( int i=0; i<=highestCity; ++i )
+	for ( int i=0; i<=highestCity; ++i )
 	{
 		if (i == previousCity ||
 			i == currentCity ||
@@ -94,7 +88,7 @@ int	StartWalk()
 	int i; 
 	int biggestNumber;
 	int distancesFromFirstCity[MaxDimension];
-	for (i = 0; i<MaxDimension; ++i )
+	for ( i = 0; i<MaxDimension; ++i )
 		distancesFromFirstCity[i] = LargeNumber;
 
 	// first we calculate the shortest distance between the first node and the rest
@@ -108,7 +102,7 @@ int	StartWalk()
 	}
 
 	// now we have identified all of the distances, first we look for nodes not visited for an error.
-	for (i = 0; i <= highestCity; ++i)
+	for ( i = 0; i <= highestCity; ++i )
 	{
 		if (LargeNumber == distancesFromFirstCity[i] ||
 			distancesFromFirstCity[i] == InvalidLocation)
@@ -122,7 +116,7 @@ int	StartWalk()
 	// and then we find the largest integer which is the minimum distance to visit all nodes.
 	
 	biggestNumber = -1;
-	for (i = 0; i <= highestCity; ++i)
+	for ( i = 1; i <= highestCity; ++i )// no need to test he first city
 	{
 		if (biggestNumber < distancesFromFirstCity[i])
 			biggestNumber = distancesFromFirstCity[i];
@@ -132,168 +126,6 @@ int	StartWalk()
 }
 
 //-------------------------------------------------------
-
-void	InitializeMapWithDefaultValues()
-{
-	ClearPath();
-
-	AddDistancePath(0, 1, 50);
-
-	AddDistancePath(0, 2, 30);
-	AddDistancePath(1, 2, 5);
-
-	AddDistancePath(0, 3, 100);
-	AddDistancePath(1, 3, 20);
-	AddDistancePath(2, 3, 50);
-
-	AddDistancePath(0, 4, 10);
-	//AddDistancePath( 1, 4, 20 );
-	//AddDistancePath( 2, 4, 50 );
-	AddDistancePath(3, 4, 10);
-}
-
-//-------------------------------------------------------
-
-void	InitializeMapWithIsolatedIslandValues()
-{
-	ClearPath();
-
-	AddDistancePath(0, 1, 50);
-
-	AddDistancePath(0, 2, 30);
-	AddDistancePath(1, 2, 5);
-
-	AddDistancePath(0, 3, 100);
-	AddDistancePath(1, 3, 20);
-	AddDistancePath(2, 3, 50);
-
-	AddDistancePath(0, 4, 10);
-	AddDistancePath(3, 4, 10);
-
-	AddDistancePath(5, 6, 10);
-	AddDistancePath(6, 7, 10);
-
-	AddDistancePath(8, 9, 10);
-}
-
-//-------------------------------------------------------
-
-// string parsing routine looks for invalid characters and distances
-int	InterpretLineAndAddDistances( const char* line, int lineNo, int numConnectionsExpected )
-{
-	int connectionId;
-	const char* ptr;
-	const char* end;
-	int dist;
-	connectionId = 0;
-	
-	for (ptr = line, end=ptr;; ptr = end, connectionId++) {
-		
-		while (*ptr == ' ' && *ptr != 0)// remove any spaces
-			ptr++;
-		if (*ptr == 'x' || *ptr == 'X')// normal
-		{
-			ptr+=2;// pass the x and the space following
-			end+=2;
-			dist = InvalidLocation;
-			continue;
-		}
-		else
-		{
-			dist = strtol(ptr, &end, 10);
-		}
-		
-		if (ptr == end)
-			break;
-		
-		if (dist != InvalidLocation && 
-			dist != 0)
-		{
-			AddDistancePath(lineNo, connectionId, dist);
-		}
-	}
-	return connectionId;
-}
-
-//-------------------------------------------------------
-
-int 	ReadInFile( const char* name )
-{
-	ClearPath();
-
-	FILE *ptr_file;
-	char buff[BufferSize];
-	int numCities;
-	int countLines;
-	int numConnections;
-	//getcwd(buff, BufferSize); // testing only
-	if (strlen(name) < 5)// filename + extension
-	{
-		printf("ERROR: incorrect file name\n");
-		assert(0);
-		return -1;
-	}
-
-	ptr_file = fopen(name, "r");
-	if (!ptr_file)
-	{
-		printf("ERROR: incorrect file name\n");
-		assert(0);
-		return -1;
-	}
-
-	if (fgets(buff, BufferSize, ptr_file) != NULL)
-	{
-		// interpet the first line as a count of the number of lines to come minus one.
-		numCities = atoi(buff);
-		if (numCities < 1 || numCities > MaxDimension )
-		{
-			printf("ERROR: incorrect value for the number of connections\n");
-			fclose(ptr_file);
-			assert(0);
-			return -1;
-		}
-	}
-
-	countLines = 0;
-	while (fgets(buff, BufferSize, ptr_file) != NULL)
-	{
-		countLines++;
-		if (countLines > MaxDimension )
-		{
-			printf("ERROR: incorrect value for the number of connections\n");
-			fclose(ptr_file);
-			assert(0);
-			return -1;
-		}
-		//printf("%s", buff);// testing only
-		// actually handle the line and fill in the map
-		numConnections = InterpretLineAndAddDistances(buff, countLines, countLines);
-		if (countLines != numConnections )
-		{
-			printf("ERROR: incorrect number of connections on a single line of text, line: %s\n", buff);
-			fclose(ptr_file);
-			assert(0);
-			return -1;
-		}
-	}
-	fclose(ptr_file);
-	if( countLines == 0 )
-	{
-		printf("ERROR: incorrect value for the number of connections\n");
-		assert(0);
-		return -1;
-	}
-
-	if( countLines != numCities - 1 )// number of lines of connections sould be less than the number of cities
-	{
-		printf("ERROR: incorrect number of connections\n");
-		assert(0);
-		return -1;
-	}
-	
-	return 0;
-}
 
 void	Init( const char* pathToAdjacencyMatrix )
 {

@@ -79,6 +79,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="File.c" />
     <ClCompile Include="ImperialMessengers.c" />
     <ClCompile Include="Map.c" />
   </ItemGroup>
